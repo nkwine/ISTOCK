@@ -9,7 +9,7 @@ class addsupplier:
         self.root =root
         self.on_clos =on_clos
         self.root.geometry('800x560+300+50')
-        self.root.iconbitmap("employee__icon.ico")
+        self.root.iconbitmap("D:/phone/gui/code/inventory_system/employee__icon.ico")
         self.root.resizable(0,0)
         self.root.config(bg="white")
         self.root.grab_set()

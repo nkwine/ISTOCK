@@ -9,7 +9,7 @@ class homeo:
         self.root =root
         self.root.resizable(0,0)
         self.root.geometry('300x300+400+100')
-        self.root.iconbitmap("employee__icon.ico")
+        self.root.iconbitmap("D:/phone/gui/code/inventory_system/employee__icon.ico")
         self.root.config(bg="#FFFFFF")
         self.root.grab_set()
         self.root.transient(parent)

@@ -8,7 +8,7 @@ class product:
         self.root =root
         self.root.resizable(0,0)
         self.root.geometry('1027x546+215+120')
-        self.root.iconbitmap("employee__icon.ico")
+        self.root.iconbitmap("D:/phone/gui/code/inventory_system/employee__icon.ico")
         self.root.config(bg="#FFFFFF")
         self.root.grab_set()
         self.root.transient(parent)

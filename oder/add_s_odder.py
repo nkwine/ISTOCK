@@ -1,7 +1,8 @@
 from tkinter import *
 from tkcalendar import DateEntry
 from tkinter import messagebox,ttk
-import re
+import re,os
+from fpdf import FPDF
 import pymysql, datetime,os,sys,platform
 from tkcalendar import DateEntry
 class sale_odder:
@@ -10,7 +11,7 @@ class sale_odder:
         self.root =root
         self.on_clos =on_clos
         self.root.geometry('1000x630+230+35')
-        self.root.iconbitmap("employee__icon.ico")
+        self.root.iconbitmap("D:/phone/gui/code/inventory_system/employee__icon.ico")
         self.root.resizable(0,0)
         self.root.config(bg="white")
         self.root.grab_set()
@@ -80,7 +81,7 @@ class sale_odder:
                                    state=DISABLED,command=lambda:self.inserti())
         self.save.grid(row=0,column=2,padx=7)
         self.print = Button(bottom,text="Print", bg="#0f4d7d",fg="white",font=("times new roman",12),width=10,
-                                   state=DISABLED,command=lambda:self.mainfunction("co"))
+                                   state=DISABLED,command=lambda:self.printi("p"))
         self.print.grid(row=0,column=3,padx=7)
         self.cancel= Button(bottom,text="Cancel", bg="#720505",fg="white",font=("times new roman",12),width=10,
                             command=self.go)
@@ -395,9 +396,9 @@ class sale_odder:
         con = self.database_connection(1996)
         mycursor = con.cursor()
         try:
-            query = "INSERT INTO sale_order VALUES(%s,%s,%s,%s,%s,%s,%s,%s)"
+            query = "INSERT INTO sale_order VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)"
             values =(to_insert_list[0],datetime.datetime.now().strftime("%m/%d/%Y"),self.name.get(),to_insert_list[1],to_insert_list[2],
-                    to_insert_list[3],to_insert_list[4],"pendding")
+                    to_insert_list[3],to_insert_list[4],"pendding","no")
             if messagebox.askyesno("","Do you want to save this order"):
                 mycursor.execute(query,values)
             else:
@@ -432,7 +433,7 @@ class sale_odder:
             self.parent.focus_set()
             self.parent.grab_set() 
         except Exception as e:
-            messagebox.showerror("Error",f"Something went wrong**{e}",parent=self.root)       
+            messagebox.showerror("Error",f"Something went wrong***{e}",parent=self.root)       
 
     def leave(self,evvent):
         self.finish.config(state=DISABLED)
@@ -478,3 +479,31 @@ class sale_odder:
         self.parent.focus_force()
         self.parent.grab_set()
         return
+    def printi(self,choice):
+        con = self.database_connection(1996)
+        mycursor = con.cursor()        
+        id = "SELECT MAX(SUBSTR(o_id,1))FROM sale_order"
+        mycursor.execute(id)
+        max_id = mycursor.fetchone()[0]
+        if max_id is None:
+            new_id = f"0000001"
+        else:
+            max_id = int(max_id)
+            new_id =f"{str(max_id+1).zfill(6)}"
+        partions = [f for f in os.listdir('/mnt')if os.path.isdir(os.path.join('/mnt',f))]if platform.system()=='Linux'else[f for f in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'if os.path.exists(f+":")]
+        os_partition = sys.executable.split("\\")[0].rstrip(":").upper()
+        non_os_partition = [p for p in partions if p!=os_partition]
+        non_os_partition = non_os_partition[0] if non_os_partition is not None else None
+        if not os.path.exists(f"{non_os_partition}:/inventory/print_order"):
+            os.makedirs(f"{non_os_partition}:/inventory/print_order")
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial",size=15)
+        content = self.bill.get(1.0,END)
+        pdf.multi_cell(0,10,txt=content)
+        pdf.output(f"{non_os_partition}:/inventory/print_order/reciept_{new_id}.pdf")
+        print_command =f"{non_os_partition}:/inventory/print_order/reciept_{new_id}.pdf"
+        print(print_command)
+        os.system(print_command) 
+            
+        

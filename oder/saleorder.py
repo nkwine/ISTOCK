@@ -9,7 +9,7 @@ class saleOrder:
         self.parent = parent
         self.root.resizable(0,0)
         self.root.geometry('1000x546+230+120')
-        self.root.iconbitmap("employee__icon.ico")
+        self.root.iconbitmap("D:/phone/gui/code/inventory_system/employee__icon.ico")
         self.root.config(bg="#FFFFFF")
         self.root.grab_set()
         self.root.focus_force()
@@ -249,7 +249,7 @@ class saleOrder:
                 return
         elif choice == "co":
             global tab_value
-            global info
+            global info,oder
             info ={}
             y = self.saleo_table.focus()
             oder = self.saleo_table.item(y,"values")
@@ -429,7 +429,6 @@ class saleOrder:
                             messagebox.showerror("Error",f"All {key} odered were/was delivered",parent=root)
                             return
                         elif int(value[2][1])>int(fetch[2]):
-                            print(int(fetch[2]))
                             messagebox.showerror("Error",f"The qty of {key} you entered is morethan the qty expected",parent=root)
                             return
                         else:   
@@ -484,6 +483,31 @@ class saleOrder:
                             con.commit()
                         mycursor.execute("UPDATE sale_order SET saved=%s WHERE o_id =%s",("yes",tab_value))
                         con.commit()
+                        bill = Text(self.root1,bg="lightyellow",fg="black",height=18,width=45,)
+                        bill.delete(1.0,END)
+                        bill.insert(END,f"Sale Number: {new_id}\n")
+                        bill.insert(END,f"Customer Name: {oder[2]}\n")
+                        bill.insert(END,f"\t\tItems\n")
+                        bill.insert(END,f" Item\t     Qty\t      Price(UGX)\tTotla(UGX)\n")
+                        bill.insert(END,f"*********\t   ****\t     **********\t**********\n")
+                        for k,v in info.items():
+                            mycursor.execute("SELECT u_measure,unit_price FROM products WHERE p_id =%s",v[0])
+                            goti = mycursor.fetchone()
+                            bill.insert(END,f"{k:<13}{str(v[2][0])+goti[0]:<10}{v[1]:<11}{int(v[2][0])*int(goti[1])}\n")
+                        bill.insert(END,f"\t\tOther details\n")
+                        bill.insert(END,f"Total bill\t   Deposit(UGX)\t  Balance(UGX)\n")
+                        bill.insert(END,f"**********\t   ************\t  ************\n")
+                        bill.insert(END,f"{check[3]:<14}{check[4]:<15}{check[5]}\n")
+                        bill.insert(END,f"\nDate: {datetime.date.today()}\n")
+                        partions = [f for f in os.listdir('/mnt')if os.path.isdir(os.path.join('/mnt',f))]if platform.system()=='Linux'else[f for f in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'if os.path.exists(f+":")]
+                        os_partition = sys.executable.split("\\")[0].rstrip(":").upper()
+                        non_os_partition = [p for p in partions if p!=os_partition]
+                        non_os_partition = non_os_partition[0] if non_os_partition is not None else None
+                        if not os.path.exists(f"{non_os_partition}:/inventory/sales"):
+                            os.makedirs(f"{non_os_partition}:/inventory/sales")
+                        file = open(f"{non_os_partition}:/inventory/sales/{new_id}.txt",'w')
+                        file.write(bill.get(1.0,END))
+                        file.close()
                             
                     messagebox.showinfo("","Data successful saved",parent=root)
                     self.root1.destroy()
@@ -503,3 +527,4 @@ class saleOrder:
     def on_close(self,event):
         self.root.focus_get()
         self.root.grab_set()
+ 

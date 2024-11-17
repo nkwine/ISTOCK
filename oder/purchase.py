@@ -9,7 +9,7 @@ class purchase:
         self.parent = parent
         self.root.resizable(0,0)
         self.root.geometry('1000x546+230+120')
-        self.root.iconbitmap("employee__icon.ico")
+        self.root.iconbitmap("D:/phone/gui/code/inventory_system/employee__icon.ico")
         self.root.config(bg="#FFFFFF")
         self.root.grab_set()
         self.root.focus_force()

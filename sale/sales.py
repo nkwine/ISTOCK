@@ -1,4 +1,5 @@
 from tkinter import *
+from fpdf import FPDF
 import pymysql,os,platform,sys,datetime
 from tkinter import ttk,messagebox
 from tkcalendar import DateEntry
@@ -9,7 +10,7 @@ class sales:
         self.parent = parent
         self.root.resizable(0,0)
         self.root.geometry('1000x546+230+120')
-        self.root.iconbitmap("employee__icon.ico")
+        self.root.iconbitmap("D:/phone/gui/code/inventory_system/employee__icon.ico")
         self.root.config(bg="#FFFFFF")
         self.root.grab_set()
         self.root.focus_force()
@@ -296,10 +297,10 @@ class sales:
             self.fin.grid(row=0,column=0,padx=30)
             self.save = Button(fram2, text="Save", bg="#0f4d7d",fg="white",font=("times new roman",12),width=10,
                                    command=lambda:self.control(self.root1,"s"),state=DISABLED)
-            self.save.grid(row=0,column=1,padx=30)
+            self.save.grid(row=0,column=2,padx=30)
             self.prin = Button(fram2, text="Print", bg="#0f4d7d",fg="white",font=("times new roman",12),width=10,
                                    command=lambda:self.control(self.root1,"p"),state=DISABLED)
-            self.prin.grid(row=0,column=2,padx=30)
+            self.prin.grid(row=0,column=1,padx=30)
             self.cancel= Button(fram2, text="Cancel", bg="#7C0707",fg="white",font=("times new roman",12),width=10,
                                     command=lambda:self.control(self.root1,"ca"))
             self.cancel.grid(row=0,column=3,padx=30)
@@ -461,8 +462,35 @@ class sales:
                     self.root1.destroy()
                 except Exception as e:
                     messagebox.showerror("Error",f"Something went wrong",parent=root)
-                    return                
-          
+                    return
+        elif choice == "p":
+            con = self.database_connection(1996)
+            mycursor = con.cursor()        
+            id = "SELECT MAX(SUBSTR(id,1))FROM saved_reciepts"
+            mycursor.execute(id)
+            max_id = mycursor.fetchone()[0]
+            if max_id is None:
+                new_id = f"0000001"
+            else:
+                max_id = int(max_id)
+                new_id =f"{str(max_id+1).zfill(6)}"
+            mycursor.execute("INSERT INTO saved_reciepts VALUES(%s)",new_id)
+            con.commit()
+            con.close()
+            partions = [f for f in os.listdir('/mnt')if os.path.isdir(os.path.join('/mnt',f))]if platform.system()=='Linux'else[f for f in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'if os.path.exists(f+":")]
+            os_partition = sys.executable.split("\\")[0].rstrip(":").upper()
+            non_os_partition = [p for p in partions if p!=os_partition]
+            non_os_partition = non_os_partition[0] if non_os_partition is not None else None
+            if not os.path.exists(f"{non_os_partition}:/inventory/print_sale"):
+                os.makedirs(f"{non_os_partition}:/inventory/print_sale")
+            pdf = FPDF()
+            pdf.add_page()
+            pdf.set_font("Arial",size=15)
+            content = self.reciept.get(1.0,END)
+            pdf.multi_cell(0,10,txt=content)
+            pdf.output(f"{non_os_partition}:/inventory/print_sale/reciept_{new_id}.pdf")
+            print_command =f"{non_os_partition}:/inventory/print_sale/reciept_{new_id}.pdf"
+            os.system(print_command)    
     def focus_in(self,event):
         if self.paid.get()=="0":
             self.paid.delete(0,END)

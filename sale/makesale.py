@@ -3,6 +3,7 @@ from tkcalendar import DateEntry
 from tkinter import messagebox,ttk
 import re
 import pymysql, datetime,os,sys,platform
+from fpdf import FPDF
 from tkcalendar import DateEntry
 class make_sale:
     def __init__(self,root,parent,on_clos=None):
@@ -10,7 +11,7 @@ class make_sale:
         self.root =root
         self.on_clos =on_clos
         self.root.geometry('1000x640+230+30')
-        self.root.iconbitmap("employee__icon.ico")
+        self.root.iconbitmap("D:/phone/gui/code/inventory_system/employee__icon.ico")
         self.root.resizable(0,0)
         self.root.config(bg="white")
         self.root.grab_set()
@@ -75,7 +76,7 @@ class make_sale:
                                    state=DISABLED,command=lambda:self.inserti())
         self.save.grid(row=0,column=2,padx=7)
         self.print = Button(bottom,text="Print", bg="#0f4d7d",fg="white",font=("times new roman",12),width=10,
-                                   state=DISABLED,command=lambda:self.mainfunction("co"))
+                                   state=DISABLED,command=lambda:self.printi("pr"))
         self.print.grid(row=0,column=3,padx=7)
         self.cancel= Button(bottom,text="Cancel", bg="#720505",fg="white",font=("times new roman",12),width=10,
                             command=self.go)
@@ -431,7 +432,36 @@ class make_sale:
         self.parent.grab_set() 
         # except Exception as e:
         #     messagebox.showerror("Error",f"Something went wrong**{e}",parent=self.root)       
-
+    def printi(self,choice):
+        if choice == "pr":
+            con = self.database_connection(1996)
+            mycursor = con.cursor()        
+            id = "SELECT MAX(SUBSTR(id,1))FROM saved_reciepts"
+            mycursor.execute(id)
+            max_id = mycursor.fetchone()[0]
+            if max_id is None:
+                new_id = f"0000001"
+            else:
+                max_id = int(max_id)
+                new_id =f"{str(max_id+1).zfill(6)}"
+            mycursor.execute("INSERT INTO saved_reciepts VALUES(%s)",new_id)
+            con.commit()
+            con.close()
+            partions = [f for f in os.listdir('/mnt')if os.path.isdir(os.path.join('/mnt',f))]if platform.system()=='Linux'else[f for f in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'if os.path.exists(f+":")]
+            os_partition = sys.executable.split("\\")[0].rstrip(":").upper()
+            non_os_partition = [p for p in partions if p!=os_partition]
+            non_os_partition = non_os_partition[0] if non_os_partition is not None else None
+            if not os.path.exists(f"{non_os_partition}:/inventory/print_sale"):
+                os.makedirs(f"{non_os_partition}:/inventory/print_sale")
+            pdf = FPDF()
+            pdf.add_page()
+            pdf.set_font("Arial",size=15)
+            self.bill.insert(1.0,f"Reciept no: {new_id}\n")
+            content = self.bill.get(1.0,END)
+            pdf.multi_cell(0,10,txt=content)
+            pdf.output(f"{non_os_partition}:/inventory/print_sale/reciept_{new_id}.pdf")
+            print_command =f"{non_os_partition}:/inventory/print_sale/reciept_{new_id}.pdf"
+            os.system(print_command)
     def leave(self,evvent):
         self.finish.config(state=DISABLED)
         self.bill_invoice.config(state=DISABLED)
